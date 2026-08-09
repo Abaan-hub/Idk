@@ -1,228 +1,170 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { useStore } from '../store';
-import { daysAgo, today, getProductivityScore } from '../utils';
-import Card from '../components/Card';
+import { daysAgo, getProductivityScore } from '../utils';
 import ProgressRing from '../components/ProgressRing';
-import { BarChart3, TrendingUp, Activity, Droplets, Flame, Target } from 'lucide-react';
-import { 
-  Chart as ChartJS, 
-  CategoryScale, 
-  LinearScale, 
-  BarElement, 
-  LineElement, 
-  PointElement, 
-  Title, 
-  Tooltip, 
-  Legend, 
-  ArcElement, 
-  Filler 
+import { BarChart3, TrendingUp, Activity, Droplets, Flame, Target, Timer } from 'lucide-react';
+import {
+  Chart as ChartJS, CategoryScale, LinearScale, BarElement,
+  LineElement, PointElement, Title, Tooltip, Legend, ArcElement, Filler
 } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
 
-ChartJS.register(
-  CategoryScale, 
-  LinearScale, 
-  BarElement, 
-  LineElement, 
-  PointElement, 
-  Title, 
-  Tooltip, 
-  Legend, 
-  ArcElement, 
-  Filler
-);
+ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, ArcElement, Filler);
 
-const Analytics = () => {
-  const { habits, todos, pomoSessions, waterLogs, foodLogs } = useStore();
-
-  const productivityScore = getProductivityScore(habits, todos, pomoSessions);
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        padding: 10,
-        cornerRadius: 8,
-        displayColors: false,
-      }
-    },
-    scales: {
-      x: {
-        grid: { display: false, drawBorder: false },
-        ticks: { color: 'rgba(255, 255, 255, 0.5)' }
-      },
-      y: {
-        grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
-        ticks: { color: 'rgba(255, 255, 255, 0.5)' },
-        beginAtZero: true
-      }
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: 'rgba(10, 12, 28, 0.95)',
+      titleColor: '#f1f5f9',
+      bodyColor: '#cbd5e1',
+      borderColor: 'rgba(255,255,255,0.06)',
+      borderWidth: 1,
+      padding: 12,
+      cornerRadius: 10,
+      displayColors: false,
     }
-  };
-
-  const chartData = useMemo(() => {
-    // Generate last 14 days labels (MM-DD)
-    const labels = Array.from({ length: 14 }, (_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - (13 - i));
-      return `${d.getMonth() + 1}/${d.getDate()}`;
-    });
-    
-    // Generate dates string array for matching
-    const dates = Array.from({ length: 14 }, (_, i) => daysAgo(13 - i));
-
-    // Focus Time Data
-    const focusData = dates.map(date => {
-      return pomoSessions
-        .filter(p => p.date === date)
-        .reduce((sum, p) => sum + (p.duration_min || 0), 0);
-    });
-
-    // Habit Completion Data
-    const habitData = dates.map(date => {
-      return habits.filter(h => h.completedDays?.[date]).length;
-    });
-
-    // Water Data
-    const waterData = dates.map(date => {
-      return waterLogs
-        .filter(w => w.date === date)
-        .reduce((sum, w) => sum + w.amount_ml, 0);
-    });
-
-    // Calorie Data
-    const calorieData = dates.map(date => {
-      return foodLogs
-        .filter(f => f.date === date)
-        .reduce((sum, f) => sum + f.calories, 0);
-    });
-
-    return {
-      labels,
-      focus: {
-        labels,
-        datasets: [{
-          data: focusData,
-          backgroundColor: 'rgba(129,140,248,0.6)',
-          borderRadius: 4
-        }]
-      },
-      habits: {
-        labels,
-        datasets: [{
-          data: habitData,
-          backgroundColor: 'rgba(52,211,153,0.6)',
-          borderRadius: 4
-        }]
-      },
-      water: {
-        labels,
-        datasets: [{
-          data: waterData,
-          borderColor: 'rgba(56,189,248,1)',
-          backgroundColor: 'rgba(56,189,248,0.1)',
-          fill: true,
-          tension: 0.4
-        }]
-      },
-      calories: {
-        labels,
-        datasets: [{
-          data: calorieData,
-          borderColor: 'rgba(251,191,36,1)',
-          backgroundColor: 'rgba(251,191,36,0.1)',
-          fill: true,
-          tension: 0.4
-        }]
-      }
-    };
-  }, [pomoSessions, habits, waterLogs, foodLogs]);
-
-  return (
-    <div className="analytics-page scroll-area" style={{ padding: '2rem' }}>
-      <header style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-        <BarChart3 size={32} color="#818CF8" />
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0' }}>Analytics</h1>
-      </header>
-
-      {/* Summary Cards */}
-      <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-        <Card className="glass-card flex items-center justify-between p-4">
-          <div>
-            <div className="text-muted text-sm mb-1 flex items-center gap-sm">
-              <Activity size={16} /> Productivity
-            </div>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{productivityScore}%</div>
-          </div>
-          <ProgressRing progress={productivityScore} size={80} strokeWidth={8} color="#818CF8" />
-        </Card>
-
-        <Card className="glass-card p-4">
-          <div className="text-muted text-sm mb-1 flex items-center gap-sm">
-            <TrendingUp size={16} color="#34D399" /> Weekly Habit Avg
-          </div>
-          <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-            {(chartData.habits.datasets[0].data.slice(-7).reduce((a,b)=>a+b,0) / 7).toFixed(1)} <span className="text-sm text-muted">/ day</span>
-          </div>
-        </Card>
-
-        <Card className="glass-card p-4">
-          <div className="text-muted text-sm mb-1 flex items-center gap-sm">
-            <Flame size={16} color="#FBBF24" /> Avg Calories (7d)
-          </div>
-          <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-            {Math.round(chartData.calories.datasets[0].data.slice(-7).reduce((a,b)=>a+b,0) / 7)} <span className="text-sm text-muted">kcal</span>
-          </div>
-        </Card>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-        {/* Focus Time Chart */}
-        <Card className="glass-card">
-          <h3 className="flex items-center gap-sm mb-4">
-            <TrendingUp size={20} color="#818CF8" /> Focus Time (14 Days)
-          </h3>
-          <div className="chart-container" style={{ height: '200px' }}>
-            <Bar data={chartData.focus} options={chartOptions} />
-          </div>
-        </Card>
-
-        {/* Habit Completion Chart */}
-        <Card className="glass-card">
-          <h3 className="flex items-center gap-sm mb-4">
-            <Target size={20} color="#34D399" /> Habits Completed (14 Days)
-          </h3>
-          <div className="chart-container" style={{ height: '200px' }}>
-            <Bar data={chartData.habits} options={chartOptions} />
-          </div>
-        </Card>
-
-        {/* Water Chart */}
-        <Card className="glass-card">
-          <h3 className="flex items-center gap-sm mb-4">
-            <Droplets size={20} color="#38BDF8" /> Water Intake (14 Days)
-          </h3>
-          <div className="chart-container" style={{ height: '200px' }}>
-            <Line data={chartData.water} options={chartOptions} />
-          </div>
-        </Card>
-
-        {/* Calories Chart */}
-        <Card className="glass-card">
-          <h3 className="flex items-center gap-sm mb-4">
-            <Flame size={20} color="#FBBF24" /> Calorie Intake (14 Days)
-          </h3>
-          <div className="chart-container" style={{ height: '200px' }}>
-            <Line data={chartData.calories} options={chartOptions} />
-          </div>
-        </Card>
-      </div>
-    </div>
-  );
+  },
+  scales: {
+    x: {
+      grid: { display: false },
+      ticks: { color: '#475569', font: { size: 10 } },
+      border: { display: false },
+    },
+    y: {
+      grid: { color: 'rgba(148,163,184,0.05)' },
+      ticks: { color: '#475569', font: { size: 10 } },
+      border: { display: false },
+      beginAtZero: true,
+    }
+  }
 };
 
-export default Analytics;
+const fadeUp = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } };
+
+export default function Analytics() {
+  const habits = useStore(s => s.habits);
+  const todos = useStore(s => s.todos);
+  const pomoSessions = useStore(s => s.pomoSessions);
+  const waterLogs = useStore(s => s.waterLogs);
+  const foodLogs = useStore(s => s.foodLogs);
+
+  const score = getProductivityScore(habits, todos, pomoSessions);
+
+  const chartData = useMemo(() => {
+    const dates = Array.from({ length: 14 }, (_, i) => daysAgo(13 - i));
+    const labels = dates.map(d => d.slice(5));
+
+    const focusData = dates.map(date =>
+      pomoSessions.filter(p => p.date === date).reduce((s, p) => s + (p.duration_min || 0), 0)
+    );
+    const habitData = dates.map(date =>
+      habits.filter(h => h.completedDays?.[date]).length
+    );
+    const waterData = dates.map(date =>
+      waterLogs.filter(w => w.date === date).reduce((s, w) => s + w.amount_ml, 0)
+    );
+    const calorieData = dates.map(date =>
+      foodLogs.filter(f => f.date === date).reduce((s, f) => s + (f.calories || 0), 0)
+    );
+
+    return { labels, focusData, habitData, waterData, calorieData };
+  }, [pomoSessions, habits, waterLogs, foodLogs]);
+
+  const mkBar = (data, color) => ({
+    labels: chartData.labels,
+    datasets: [{
+      data, backgroundColor: color, borderRadius: 6, borderSkipped: false,
+      hoverBackgroundColor: color.replace('0.5', '0.8'),
+    }],
+  });
+
+  const mkLine = (data, color) => ({
+    labels: chartData.labels,
+    datasets: [{
+      data,
+      borderColor: color,
+      backgroundColor: color.replace('1)', '0.08)'),
+      fill: true,
+      tension: 0.4,
+      pointRadius: 0,
+      pointHoverRadius: 5,
+      pointHoverBackgroundColor: color,
+      pointHoverBorderColor: '#fff',
+      pointHoverBorderWidth: 2,
+      borderWidth: 2,
+    }],
+  });
+
+  const weekFocus = chartData.focusData.slice(-7).reduce((a, b) => a + b, 0);
+  const weekHabits = chartData.habitData.slice(-7).reduce((a, b) => a + b, 0);
+  const weekWater = chartData.waterData.slice(-7).reduce((a, b) => a + b, 0);
+  const weekCal = chartData.calorieData.slice(-7).reduce((a, b) => a + b, 0);
+
+  const charts = [
+    { title: 'Focus Time', icon: <Timer size={18} />, cls: 'purple', data: mkBar(chartData.focusData, 'rgba(139,92,246,0.5)'), type: 'bar', sub: `${weekFocus}m this week` },
+    { title: 'Habits Completed', icon: <Target size={18} />, cls: 'green', data: mkBar(chartData.habitData, 'rgba(52,211,153,0.5)'), type: 'bar', sub: `${weekHabits} this week` },
+    { title: 'Water Intake', icon: <Droplets size={18} />, cls: 'cyan', data: mkLine(chartData.waterData, 'rgba(34,211,238,1)'), type: 'line', sub: `${Math.round(weekWater / 7)}ml avg/day` },
+    { title: 'Calories', icon: <Flame size={18} />, cls: 'amber', data: mkLine(chartData.calorieData, 'rgba(251,191,36,1)'), type: 'line', sub: `${Math.round(weekCal / 7)} avg/day` },
+  ];
+
+  return (
+    <motion.div className="page" initial="hidden" animate="visible" variants={stagger}>
+      <motion.div variants={fadeUp}>
+        <div className="page-header">
+          <h1><span className="gradient-text">Analytics</span></h1>
+          <p className="text-muted">14-day overview of your progress</p>
+        </div>
+      </motion.div>
+
+      {/* Score + Summary */}
+      <motion.div variants={fadeUp} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr 1fr 1fr', gap: 14, marginBottom: 24 }}>
+        <div className="glow-card animated-border" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, minWidth: 160 }}>
+          <ProgressRing progress={score / 100} size={100} strokeWidth={8} label={`${score}`} sublabel="score" color="#a78bfa" />
+        </div>
+        {[
+          { label: 'Focus This Week', value: `${weekFocus}m`, icon: <Timer size={16} />, cls: 'purple' },
+          { label: 'Avg Water/Day', value: `${Math.round(weekWater / 7)}ml`, icon: <Droplets size={16} />, cls: 'cyan' },
+          { label: 'Avg Calories/Day', value: `${Math.round(weekCal / 7)}`, icon: <Flame size={16} />, cls: 'amber' },
+        ].map(s => (
+          <div key={s.label} className={`stat-card-premium ${s.cls}`}>
+            <div className="stat-card-label">
+              <span className={`icon-box sm ${s.cls}`}>{s.icon}</span>
+              {s.label}
+            </div>
+            <div className="stat-card-value">{s.value}</div>
+          </div>
+        ))}
+      </motion.div>
+
+      {/* Charts Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 16 }}>
+        {charts.map((c, i) => (
+          <motion.div
+            key={c.title}
+            className="glow-card"
+            variants={fadeUp}
+          >
+            <div className="section-header">
+              <div className="section-title">
+                <span className={`icon-box sm ${c.cls}`}>{c.icon}</span>
+                {c.title}
+              </div>
+              <span className="text-sm text-muted">{c.sub}</span>
+            </div>
+            <div style={{ height: 200, position: 'relative' }}>
+              {c.type === 'bar'
+                ? <Bar data={c.data} options={chartOptions} />
+                : <Line data={c.data} options={chartOptions} />
+              }
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
