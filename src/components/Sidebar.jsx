@@ -2,7 +2,7 @@ import { useStore } from '../store';
 import {
   LayoutDashboard, Droplets, UtensilsCrossed, Dumbbell,
   CheckSquare, Target, Timer, Moon, BookOpen, BarChart3,
-  Settings, Sun, MoonStar
+  Settings, Sun, MoonStar, Zap
 } from 'lucide-react';
 
 const NAV_SECTIONS = [
@@ -49,7 +49,9 @@ export default function Sidebar() {
     <aside className="sidebar">
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          <div className="sidebar-logo-icon">⚡</div>
+          <div className="sidebar-logo-icon">
+            <Zap size={20} color="#fff" />
+          </div>
           <span className="sidebar-logo-text">Prodigy</span>
         </div>
       </div>
