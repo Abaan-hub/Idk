@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { useStore } from '../store';
 import { today, JOURNAL_MOODS, JOURNAL_PROMPTS } from '../utils';
 import Card from '../components/Card';
@@ -59,9 +60,9 @@ export default function Journal() {
   };
 
   return (
-    <div className="p-4 flex flex-col gap-md max-w-4xl mx-auto">
+    <motion.div className="page p-4 flex flex-col gap-md max-w-4xl mx-auto" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.3}}>
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Journal</h1>
+        <h1 className="text-2xl font-bold"><span className="gradient-text">Journal</span></h1>
         <button className="btn btn-primary btn-sm flex items-center gap-sm" onClick={() => { setIsModalOpen(true); setEditingId(null); setFormData({ title: '', content: '', mood: '', tags: '' }); }}>
           <Plus size={16} /> New Entry
         </button>
@@ -157,6 +158,6 @@ export default function Journal() {
           </div>
         </form>
       </Modal>
-    </div>
+    </motion.div>
   );
 }

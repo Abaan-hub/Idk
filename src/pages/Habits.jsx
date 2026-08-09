@@ -59,14 +59,14 @@ const Habits = () => {
 
   return (
     <motion.div 
-      className="page-container"
+      className="page page-container"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
     >
       <div className="flex items-center gap-sm mb-6">
         <Activity className="text-primary" size={28} />
-        <h1 className="text-3xl font-bold">Habits</h1>
+        <h1 className="text-3xl font-bold"><span className="gradient-text">Habits</span></h1>
       </div>
 
       <div className="grid-4 grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">

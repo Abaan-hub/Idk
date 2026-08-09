@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { useStore } from '../store';
 import { today, daysAgo } from '../utils';
 import Card from '../components/Card';
@@ -61,8 +62,8 @@ export default function Exercise() {
   });
 
   return (
-    <div className="p-4 flex flex-col gap-md max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-2">Exercise</h1>
+    <motion.div className="page p-4 flex flex-col gap-md max-w-4xl mx-auto" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.3}}>
+      <h1 className="text-2xl font-bold mb-2"><span className="gradient-text">Exercise</span></h1>
 
       <div className="grid-4 mb-4">
         <Card className="stat-card glass-card p-4">
@@ -146,6 +147,6 @@ export default function Exercise() {
           </div>
         </Card>
       </div>
-    </div>
+    </motion.div>
   );
 }

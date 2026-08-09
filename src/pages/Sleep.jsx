@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Star, Moon, Sun, Clock, Trash2, Info } from 'lucide-react';
 import { useStore } from '../store';
 import { today } from '../utils';
@@ -72,9 +73,9 @@ export default function Sleep() {
     : null;
 
   return (
-    <div className="page-container" style={{padding: '24px'}}>
+    <motion.div className="page" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.3}}>
       <div className="flex items-center gap-md" style={{marginBottom: '24px'}}>
-        <h2>Sleep Tracker</h2>
+        <h1><span className="gradient-text">Sleep Tracker</span></h1>
       </div>
 
       <div className="grid-4" style={{marginBottom: '24px', display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))'}}>
@@ -237,6 +238,6 @@ export default function Sleep() {
           </div>
         </Card>
       </div>
-    </div>
+    </motion.div>
   );
 }

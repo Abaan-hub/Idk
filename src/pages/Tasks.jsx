@@ -57,14 +57,14 @@ const Tasks = () => {
 
   return (
     <motion.div 
-      className="page-container"
+      className="page"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
     >
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold flex items-center gap-sm">
-          <ListTodo className="text-primary" /> Tasks
+          <ListTodo className="text-primary" /> <span className="gradient-text">Tasks</span>
         </h1>
         {todos.length > 0 && (
           <button className="btn btn-ghost btn-sm text-muted" onClick={clearDoneTodos}>

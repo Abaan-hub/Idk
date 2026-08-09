@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useStore } from '../store';
 import Card from '../components/Card';
 import { showToast } from '../components/Toast';
@@ -67,8 +68,8 @@ export default function Settings() {
   };
 
   return (
-    <div className="p-4 flex flex-col gap-md max-w-3xl mx-auto pb-12">
-      <h1 className="text-2xl font-bold mb-4">Settings</h1>
+    <motion.div className="page" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.3}}>
+      <h1 className="text-2xl font-bold mb-4"><span className="gradient-text">Settings</span></h1>
 
       <Card className="glass-card p-5 mb-4">
         <h2 className="text-lg font-semibold flex items-center gap-2 mb-4"><User size={20}/> Profile & Appearance</h2>
@@ -176,6 +177,6 @@ export default function Settings() {
       <div className="text-center text-sm text-muted mt-8">
         Prodigy v2.0
       </div>
-    </div>
+    </motion.div>
   );
 }

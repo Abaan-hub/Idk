@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { Play, Pause, Square, SkipForward, Settings, Volume2, CloudRain, Coffee, TreePine, Headphones } from 'lucide-react';
 import { useStore } from '../store';
 import { formatTime, today } from '../utils';
@@ -115,9 +116,9 @@ export default function Focus() {
   };
 
   return (
-    <div className="page-container" style={{padding: '24px'}}>
+    <motion.div className="page page-container" style={{padding: '24px'}} initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.3}}>
       <div className="flex items-center gap-md" style={{justifyContent: 'space-between', marginBottom: '24px'}}>
-        <h2>Focus</h2>
+        <h1><span className="gradient-text">Focus</span></h1>
         <button className="btn btn-ghost btn-icon" onClick={() => setShowSettings(!showSettings)}>
           <Settings size={20} />
         </button>
@@ -248,6 +249,6 @@ export default function Focus() {
           </Card>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
