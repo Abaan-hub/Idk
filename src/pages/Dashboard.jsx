@@ -1,200 +1,214 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useStore } from '../store';
 import { today, formatDate, getGreeting, getGreetingEmoji, getProductivityScore, QUOTES } from '../utils';
 import Card from '../components/Card';
 import ProgressRing from '../components/ProgressRing';
 import { showToast } from '../components/Toast';
-import { Droplets, Timer, CheckSquare, Target, TrendingUp, Sparkles, Plus, Clock, Zap } from 'lucide-react';
+import { Droplets, Timer, CheckSquare, Target, Sparkles, Clock, Zap, ArrowRight, Check } from 'lucide-react';
 
-const Dashboard = () => {
-  const { 
-    habits, 
-    todos, 
-    pomoSessions, 
-    waterLogs, 
-    quoteIdx, 
-    nextQuote, 
-    toggleHabit, 
-    addWater, 
-    setPage 
-  } = useStore();
+export default function Dashboard() {
+  const habits = useStore(s => s.habits);
+  const todos = useStore(s => s.todos);
+  const pomoSessions = useStore(s => s.pomoSessions);
+  const waterLogs = useStore(s => s.waterLogs);
+  const foodLogs = useStore(s => s.foodLogs);
+  const quoteIdx = useStore(s => s.quoteIdx);
+  const nextQuote = useStore(s => s.nextQuote);
+  const toggleHabit = useStore(s => s.toggleHabit);
+  const addWater = useStore(s => s.addWater);
+  const setPage = useStore(s => s.setPage);
 
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [clock, setClock] = useState(new Date());
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
+    const t = setInterval(() => setClock(new Date()), 1000);
+    return () => clearInterval(t);
   }, []);
 
-  const dToday = today();
-  const formatTime = (date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  };
+  const d = today();
 
-  // Stats calculations
-  const focusTimeToday = pomoSessions
-    .filter(p => p.date === dToday)
-    .reduce((acc, p) => acc + (p.duration_min || 0), 0);
-  
+  // Stats
+  const focusMin = pomoSessions.filter(s => s.date === d).reduce((a, s) => a + (s.duration_min || 0), 0);
   const tasksDone = todos.filter(t => t.done).length;
-  
-  const habitsDone = habits.filter(h => h.completedDays && h.completedDays[dToday]).length;
-  const habitsTotal = habits.length;
+  const habitsDone = habits.filter(h => h.completedDays?.[d]).length;
+  const waterMl = waterLogs.filter(w => w.date === d).reduce((a, w) => a + w.amount_ml, 0);
+  const score = getProductivityScore(habits, todos, pomoSessions);
 
-  const waterToday = waterLogs
-    .filter(w => w.date === dToday)
-    .reduce((acc, w) => acc + w.amount_ml, 0);
-
-  const productivityScore = getProductivityScore(habits, todos, pomoSessions) / 100;
-
-  const handleAddWater = () => {
-    addWater({ amount_ml: 250, date: dToday });
-    showToast('250ml water added!', 'success');
-  };
+  // Timeline entries
+  const timelineEntries = [
+    ...waterLogs.filter(w => w.date === d).map(w => ({
+      time: new Date(w.time),
+      icon: '💧',
+      label: `${w.amount_ml}ml water`,
+      color: '#38bdf8',
+    })),
+    ...foodLogs.filter(f => f.date === d).map(f => ({
+      time: new Date(f.time),
+      icon: '🍽️',
+      label: `${f.name || f.meal_type} (${f.calories} cal)`,
+      color: '#fbbf24',
+    })),
+    ...pomoSessions.filter(s => s.date === d).map(s => ({
+      time: new Date(s.completed_at),
+      icon: '🍅',
+      label: `${s.duration_min}min focus`,
+      color: '#818cf8',
+    })),
+  ].sort((a, b) => b.time - a.time).slice(0, 8);
 
   return (
-    <div className="dashboard-page scroll-area" style={{ padding: '2rem' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+    <motion.div
+      className="page"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
         <div>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0' }}>
+          <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 4 }}>
             {getGreeting()} {getGreetingEmoji()}
           </h1>
-          <p className="text-muted" style={{ fontSize: '1.2rem', marginTop: '0.5rem' }}>
-            {formatDate()}
-          </p>
+          <p className="text-muted" style={{ fontSize: 14 }}>{formatDate()}</p>
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <div className="flex items-center gap-sm" style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-            <Clock size={24} />
-            <span>{formatTime(currentTime)}</span>
-          </div>
+        <div className="flex items-center gap-sm" style={{ fontSize: 14, color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
+          <Clock size={16} />
+          <span>{clock.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
         </div>
-      </header>
+      </div>
 
       {/* Stats Row */}
-      <div className="grid-4" style={{ marginBottom: '2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-        <Card className="stat-card glass-card">
-          <div className="flex items-center gap-sm text-muted mb-2">
-            <Timer className="stat-icon" size={20} color="#818CF8" />
-            <span className="stat-label">Focus Time</span>
-          </div>
-          <div className="stat-value" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-            {focusTimeToday} <span className="text-sm text-muted">min</span>
-          </div>
-        </Card>
-        
-        <Card className="stat-card glass-card">
-          <div className="flex items-center gap-sm text-muted mb-2">
-            <CheckSquare className="stat-icon" size={20} color="#34D399" />
-            <span className="stat-label">Tasks Done</span>
-          </div>
-          <div className="stat-value" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-            {tasksDone} <span className="text-sm text-muted">/ {todos.length}</span>
-          </div>
-        </Card>
-
-        <Card className="stat-card glass-card">
-          <div className="flex items-center gap-sm text-muted mb-2">
-            <Target className="stat-icon" size={20} color="#FBBF24" />
-            <span className="stat-label">Habits</span>
-          </div>
-          <div className="stat-value" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-            {habitsDone} <span className="text-sm text-muted">/ {habitsTotal}</span>
-          </div>
-        </Card>
-
-        <Card className="stat-card glass-card">
-          <div className="flex items-center gap-sm text-muted mb-2">
-            <Droplets className="stat-icon" size={20} color="#38BDF8" />
-            <span className="stat-label">Water</span>
-          </div>
-          <div className="stat-value" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-            {waterToday} <span className="text-sm text-muted">ml</span>
-          </div>
-        </Card>
+      <div className="grid-4" style={{ marginBottom: 20 }}>
+        {[
+          { icon: '⏱️', value: `${focusMin}m`, label: 'Focus', color: '#818cf8' },
+          { icon: '✅', value: `${tasksDone}/${todos.length}`, label: 'Tasks', color: '#34d399' },
+          { icon: '🔥', value: `${habitsDone}/${habits.length}`, label: 'Habits', color: '#fbbf24' },
+          { icon: '💧', value: `${waterMl}ml`, label: 'Water', color: '#38bdf8' },
+        ].map((s, i) => (
+          <motion.div
+            key={s.label}
+            className="stat-card"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+          >
+            <div className="stat-icon">{s.icon}</div>
+            <div className="stat-value">{s.value}</div>
+            <div className="stat-label">{s.label}</div>
+          </motion.div>
+        ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem', marginBottom: '2rem' }}>
+      {/* Score + Quote Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 20, marginBottom: 20 }}>
         {/* Productivity Score */}
-        <Card className="glass-card flex flex-col items-center justify-center" style={{ padding: '2rem' }}>
-          <h3 className="mb-4 text-muted flex items-center gap-sm">
-            <Zap size={20} /> Productivity Score
-          </h3>
-          <ProgressRing progress={productivityScore} size={140} strokeWidth={12} color="#818CF8" />
+        <Card className="glass-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, minWidth: 180 }}>
+          <ProgressRing progress={score / 100} size={130} strokeWidth={10} label={`${score}`} sublabel="score" />
+          <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>
+            <Zap size={12} style={{ display: 'inline', verticalAlign: -1 }} /> Productivity
+          </div>
         </Card>
 
-        {/* Quote & Quick Actions */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <Card className="glass-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div className="flex justify-between items-start">
-              <Sparkles size={24} color="#FBBF24" style={{ marginBottom: '1rem' }} />
-              <button className="btn btn-ghost btn-sm" onClick={nextQuote}>Next</button>
-            </div>
-            <p style={{ fontSize: '1.25rem', fontStyle: 'italic', marginBottom: '0.5rem' }}>
-              "{QUOTES[quoteIdx % QUOTES.length] || 'Stay focused and never give up.'}"
+        {/* Quote */}
+        <Card className="glass-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <Sparkles size={20} color="#fbbf24" style={{ marginBottom: 12 }} />
+            <p style={{ fontSize: 16, fontStyle: 'italic', lineHeight: 1.7, color: 'var(--text-secondary)' }}>
+              "{QUOTES[quoteIdx % QUOTES.length]}"
             </p>
-          </Card>
-
-          <Card className="glass-card">
-            <h3 className="mb-3 text-sm text-muted">Quick Actions</h3>
-            <div className="flex gap-md" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              <button className="btn btn-primary flex items-center gap-sm" onClick={handleAddWater}>
-                <Droplets size={16} /> +250ml Water
-              </button>
-              <button className="btn flex items-center gap-sm" onClick={() => setPage('focus')} style={{ background: 'rgba(255,255,255,0.1)' }}>
-                <Timer size={16} /> Focus
-              </button>
-              <button className="btn flex items-center gap-sm" onClick={() => setPage('tasks')} style={{ background: 'rgba(255,255,255,0.1)' }}>
-                <Plus size={16} /> Add Task
-              </button>
-              <button className="btn flex items-center gap-sm" onClick={() => setPage('analytics')} style={{ background: 'rgba(255,255,255,0.1)' }}>
-                <TrendingUp size={16} /> Analytics
-              </button>
-            </div>
-          </Card>
-        </div>
+          </div>
+          <div style={{ textAlign: 'right', marginTop: 12 }}>
+            <button className="btn btn-ghost btn-sm" onClick={nextQuote}>✨ New Quote</button>
+          </div>
+        </Card>
       </div>
+
+      {/* Quick Actions */}
+      <Card className="glass-card" style={{ marginBottom: 20 }}>
+        <div className="card-header">
+          <div className="card-title"><Zap size={18} /> Quick Actions</div>
+        </div>
+        <div className="flex gap-md" style={{ flexWrap: 'wrap' }}>
+          <button className="btn btn-primary" onClick={() => { addWater({ amount_ml: 250 }); showToast('💧 250ml added!'); }}>
+            <Droplets size={16} /> +250ml Water
+          </button>
+          <button className="btn" onClick={() => setPage('focus')}>
+            <Timer size={16} /> Start Focus
+          </button>
+          <button className="btn" onClick={() => setPage('tasks')}>
+            <CheckSquare size={16} /> Add Task
+          </button>
+          <button className="btn" onClick={() => setPage('analytics')}>
+            <ArrowRight size={16} /> Analytics
+          </button>
+        </div>
+      </Card>
 
       {/* Today's Habits */}
-      <Card className="glass-card">
-        <h2 className="flex items-center gap-sm mb-4" style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-          <Target size={24} color="#34D399" /> Today's Habits
-        </h2>
+      <Card className="glass-card" style={{ marginBottom: 20 }}>
+        <div className="card-header">
+          <div className="card-title"><Target size={18} /> Today's Habits</div>
+          <span className="badge badge-accent">{habitsDone}/{habits.length}</span>
+        </div>
         {habits.length === 0 ? (
-          <p className="text-muted">No habits added yet.</p>
+          <div className="empty-state">
+            <div className="empty-icon">🎯</div>
+            <p className="empty-text">No habits yet. Add some in the Habits page!</p>
+          </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
-            {habits.map(habit => {
-              const isChecked = !!habit.completedDays?.[dToday];
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 8 }}>
+            {habits.map(h => {
+              const done = !!h.completedDays?.[d];
               return (
-                <div 
-                  key={habit.id} 
-                  className="flex items-center gap-md p-3" 
-                  style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '8px', cursor: 'pointer' }}
-                  onClick={() => toggleHabit(habit.id)}
+                <div
+                  key={h.id}
+                  className="list-item"
+                  style={{ cursor: 'pointer', borderRadius: 10, padding: '10px 14px' }}
+                  onClick={() => toggleHabit(h.id)}
                 >
-                  <div className={`checkbox ${isChecked ? 'checked' : ''}`} style={{ 
-                    width: '24px', height: '24px', borderRadius: '50%', 
-                    border: `2px solid ${isChecked ? habit.color || '#34D399' : 'rgba(255,255,255,0.3)'}`,
-                    background: isChecked ? habit.color || '#34D399' : 'transparent',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                  }}>
-                    {isChecked && <CheckSquare size={14} color="#fff" />}
+                  <div className={`checkbox ${done ? 'checked' : ''}`}>
+                    {done && <Check size={14} />}
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: '600', textDecoration: isChecked ? 'line-through' : 'none', opacity: isChecked ? 0.6 : 1 }}>
-                      {habit.name}
-                    </div>
-                  </div>
-                  {habit.emoji && <span style={{ fontSize: '1.2rem' }}>{habit.emoji}</span>}
+                  <span style={{ fontSize: 20 }}>{h.emoji}</span>
+                  <span style={{
+                    flex: 1,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    textDecoration: done ? 'line-through' : 'none',
+                    opacity: done ? 0.5 : 1,
+                  }}>{h.name}</span>
                 </div>
               );
             })}
           </div>
         )}
       </Card>
-    </div>
-  );
-};
 
-export default Dashboard;
+      {/* Activity Timeline */}
+      {timelineEntries.length > 0 && (
+        <Card className="glass-card">
+          <div className="card-header">
+            <div className="card-title"><Clock size={18} /> Today's Activity</div>
+          </div>
+          <div className="flex-col gap-xs">
+            {timelineEntries.map((e, i) => (
+              <div key={i} className="flex items-center gap-md" style={{ padding: '8px 0', borderBottom: i < timelineEntries.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                <span style={{
+                  width: 8, height: 8, borderRadius: '50%',
+                  background: e.color, flexShrink: 0,
+                  boxShadow: `0 0 8px ${e.color}60`,
+                }} />
+                <span className="text-muted text-sm" style={{ width: 70, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                  {e.time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+                <span style={{ fontSize: 16, flexShrink: 0 }}>{e.icon}</span>
+                <span style={{ fontSize: 14 }}>{e.label}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </motion.div>
+  );
+}
