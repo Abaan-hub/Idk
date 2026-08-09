@@ -79,12 +79,12 @@ const Analytics = () => {
     const focusData = dates.map(date => {
       return pomoSessions
         .filter(p => p.date === date)
-        .reduce((sum, p) => sum + p.duration, 0);
+        .reduce((sum, p) => sum + (p.duration_min || 0), 0);
     });
 
     // Habit Completion Data
     const habitData = dates.map(date => {
-      return habits.filter(h => h.completedDays?.includes(date)).length;
+      return habits.filter(h => h.completedDays?.[date]).length;
     });
 
     // Water Data

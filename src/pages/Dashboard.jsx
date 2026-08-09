@@ -34,19 +34,18 @@ const Dashboard = () => {
   // Stats calculations
   const focusTimeToday = pomoSessions
     .filter(p => p.date === dToday)
-    .reduce((acc, p) => acc + p.duration, 0);
+    .reduce((acc, p) => acc + (p.duration_min || 0), 0);
   
-  const tasksToday = todos.filter(t => t.date === dToday);
-  const tasksDone = tasksToday.filter(t => t.completed).length;
+  const tasksDone = todos.filter(t => t.done).length;
   
-  const habitsDone = habits.filter(h => h.completedDays && h.completedDays.includes(dToday)).length;
+  const habitsDone = habits.filter(h => h.completedDays && h.completedDays[dToday]).length;
   const habitsTotal = habits.length;
 
   const waterToday = waterLogs
     .filter(w => w.date === dToday)
     .reduce((acc, w) => acc + w.amount_ml, 0);
 
-  const productivityScore = getProductivityScore(habits, todos, pomoSessions);
+  const productivityScore = getProductivityScore(habits, todos, pomoSessions) / 100;
 
   const handleAddWater = () => {
     addWater({ amount_ml: 250, date: dToday });
@@ -90,7 +89,7 @@ const Dashboard = () => {
             <span className="stat-label">Tasks Done</span>
           </div>
           <div className="stat-value" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-            {tasksDone} <span className="text-sm text-muted">/ {tasksToday.length}</span>
+            {tasksDone} <span className="text-sm text-muted">/ {todos.length}</span>
           </div>
         </Card>
 
@@ -132,9 +131,8 @@ const Dashboard = () => {
               <button className="btn btn-ghost btn-sm" onClick={nextQuote}>Next</button>
             </div>
             <p style={{ fontSize: '1.25rem', fontStyle: 'italic', marginBottom: '0.5rem' }}>
-              "{QUOTES[quoteIdx]?.text || 'Stay focused and never give up.'}"
+              "{QUOTES[quoteIdx % QUOTES.length] || 'Stay focused and never give up.'}"
             </p>
-            <p className="text-sm text-muted">- {QUOTES[quoteIdx]?.author || 'Unknown'}</p>
           </Card>
 
           <Card className="glass-card">
@@ -143,7 +141,7 @@ const Dashboard = () => {
               <button className="btn btn-primary flex items-center gap-sm" onClick={handleAddWater}>
                 <Droplets size={16} /> +250ml Water
               </button>
-              <button className="btn flex items-center gap-sm" onClick={() => setPage('pomodoro')} style={{ background: 'rgba(255,255,255,0.1)' }}>
+              <button className="btn flex items-center gap-sm" onClick={() => setPage('focus')} style={{ background: 'rgba(255,255,255,0.1)' }}>
                 <Timer size={16} /> Focus
               </button>
               <button className="btn flex items-center gap-sm" onClick={() => setPage('tasks')} style={{ background: 'rgba(255,255,255,0.1)' }}>
@@ -167,7 +165,7 @@ const Dashboard = () => {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
             {habits.map(habit => {
-              const isChecked = habit.completedDays?.includes(dToday);
+              const isChecked = !!habit.completedDays?.[dToday];
               return (
                 <div 
                   key={habit.id} 
@@ -188,7 +186,7 @@ const Dashboard = () => {
                       {habit.name}
                     </div>
                   </div>
-                  {habit.icon && <span style={{ fontSize: '1.2rem' }}>{habit.icon}</span>}
+                  {habit.emoji && <span style={{ fontSize: '1.2rem' }}>{habit.emoji}</span>}
                 </div>
               );
             })}
