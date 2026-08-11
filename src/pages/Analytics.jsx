@@ -18,10 +18,10 @@ const chartOptions = {
   plugins: {
     legend: { display: false },
     tooltip: {
-      backgroundColor: 'rgba(10, 12, 28, 0.95)',
-      titleColor: '#f1f5f9',
-      bodyColor: '#cbd5e1',
-      borderColor: 'rgba(255,255,255,0.06)',
+      backgroundColor: 'rgba(13,18,37,0.97)',
+      titleColor: '#f8fafc',
+      bodyColor: '#94a3b8',
+      borderColor: 'rgba(124,58,237,0.25)',
       borderWidth: 1,
       padding: 12,
       cornerRadius: 10,
@@ -31,12 +31,12 @@ const chartOptions = {
   scales: {
     x: {
       grid: { display: false },
-      ticks: { color: '#475569', font: { size: 10 } },
+      ticks: { color: '#334155', font: { size: 10 } },
       border: { display: false },
     },
     y: {
-      grid: { color: 'rgba(148,163,184,0.05)' },
-      ticks: { color: '#475569', font: { size: 10 } },
+      grid: { color: 'rgba(255,255,255,0.03)' },
+      ticks: { color: '#334155', font: { size: 10 } },
       border: { display: false },
       beginAtZero: true,
     }
